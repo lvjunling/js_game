@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+<canvas id="content" width="400" height="300" style="background: bisque"></canvas>
+<script>
+
+    function loadImageFromPath(path) {
+        var image = new Image()
+        image.src = path
+        return image
+    }
+
+    function Pandle() {
+
+        var img = loadImageFromPath("./pandle.png")
+        var o = {
+            x: 100,
+            y: 150,
+            speed: 10,
+            scaleWidth: 100,
+            scaleHeight: 30,
+            img: img,
+        }
+
+        o.moveLeft = function () {
+            o.x -= o.speed
+        }
+
+        o.moveRight = function () {
+            o.x += o.speed
+        }
+
+        return o
+    }
+
+    function Ball(game) {
+
+        var img = loadImageFromPath("./ball.jpg")
+        var o = {
+            x: 100,
+            y: 120,
+            speedX: 5,
+            speedY: 5,
+            scaleWidth: 30,
+            scaleHeight: 30,
+            img: img,
+	        fired: false,
+        }
+
+        o.fire = function(){
+            o.fired = true;
+        }
+
+        o.move = function(){
+
+            if(o.fired){
+
+                if(o.x < 0 || o.x + o.scaleWidth > game.canvas.width) o.speedX *= -1
+                if(o.y < 0 || o.y + o.scaleHeight > game.canvas.height) o.speedY *= -1
+
+                o.x += o.speedX
+                o.y += o.speedY
+
+            }
+        }
+
+        //碰撞检测
+        o.collide = function(imgObj){
+            return (o.y + o.scaleHeight> imgObj.y)
+	                && o.x > imgObj.x && o.x < imgObj.x+ imgObj.scaleWidth
+        }
+
+        //反弹
+	    o.rebound = function(){
+            o.speedX *= -1
+            o.speedY *= -1
+	    }
+
+        return o
+    }
+
+    var guaGame = function () {
+
+        var g = {
+            actions: {},
+	        keydowns: {},
+        }
+
+        var canvas = document.getElementById('content')
+        var context = canvas.getContext('2d')
+
+        g.ctx = context
+	    g.canvas = canvas
+
+        g.drawImage = function (imgObj) {
+            g.ctx.drawImage(imgObj.img, imgObj.x, imgObj.y, imgObj.scaleWidth && imgObj.scaleWidth, imgObj.scaleHeight && imgObj.scaleHeight)
+        }
+
+        window.addEventListener("keyup", function(event){
+            g.keydowns[event.key] = false
+        })
+
+	    window.addEventListener("keydown", function(event){
+	        g.keydowns[event.key] = true;
+	    })
+
+	    g.registerAction = function(key, callback){
+            g.actions[key] = callback
+	    }
+
+	    g.draw = function(){
+
+	    }
+
+	    g.update = function(){
+
+	    }
+
+	    setInterval(function(){
+
+            k.forEach(function(item){
+                g.keydowns[item] && g.actions[item]()
+                var k = Object.keys(g.actions)
+            })
+
+		    g.update()
+
+		    g.ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+		    g.draw()
+
+	    }, 1000/60)
+
+        return g
+    }
+
+    function __main() {
+        var game = guaGame()
+
+        var pandle = Pandle()
+	    ball = Ball(game)
+
+        game.registerAction("o", function(){
+            pandle.moveLeft()
+        })
+
+	    game.registerAction("p", function(){
+	        pandle.moveRight()
+	    })
+
+	    game.registerAction("f", function(){
+			ball.fire()
+	    })
+
+	    game.update = function(){
+            ball.move()
+		    if(ball.collide(pandle)){
+                ball.rebound()
+		    }
+	    }
+
+	    game.draw = function(){
+            game.drawImage(pandle)
+		    game.drawImage(ball)
+	    }
+
+    }
+
+    __main()
+
+</script>
+</body>
+</html>
